@@ -1,0 +1,108 @@
+<script setup>
+import { useAuthStore } from './stores/auth'
+import { useRouter, useRoute } from 'vue-router'
+import { LayoutDashboard, MapPinned, Coins, Receipt, UserRound, LogOut } from 'lucide-vue-next'
+import ToastContainer from './components/ToastContainer.vue'
+
+const auth = useAuthStore()
+const router = useRouter()
+const route = useRoute()
+
+function logout() {
+  auth.logout()
+  router.push('/login')
+}
+
+const navItems = [
+  { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/activities', label: 'Activity', icon: MapPinned },
+  { path: '/earnings', label: 'Earnings', icon: Coins },
+  { path: '/expenses', label: 'Expenses', icon: Receipt },
+  { path: '/profile', label: 'Profile', icon: UserRound },
+]
+</script>
+
+<template>
+  <ToastContainer />
+  <div v-if="!auth.isAuthenticated">
+    <router-view />
+  </div>
+
+  <div v-else class="min-h-screen bg-gray-50 lg:flex">
+    <!-- Desktop Sidebar -->
+    <aside class="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-white border-r border-gray-200">
+      <div class="px-6 py-5 border-b border-gray-100">
+        <h1 class="text-xl font-bold text-gray-800 tracking-tight">TVDE Tracker</h1>
+        <p class="text-xs text-gray-400 mt-0.5">Earnings & Expense Manager</p>
+      </div>
+
+      <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        <router-link
+          v-for="item in navItems"
+          :key="item.path"
+          :to="item.path"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150"
+          :class="route.path === item.path
+            ? 'bg-blue-50 text-blue-700'
+            : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'"
+        >
+          <component :is="item.icon" :size="20" :stroke-width="1.5" class="shrink-0" />
+          {{ item.label }}
+        </router-link>
+      </nav>
+
+      <div class="p-4 border-t border-gray-100">
+        <div class="flex items-center gap-3 mb-3 px-2">
+          <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-bold">
+            {{ auth.user?.name?.charAt(0) || '?' }}
+          </div>
+          <div class="min-w-0">
+            <p class="text-sm font-medium text-gray-700 truncate">{{ auth.user?.name }}</p>
+            <p class="text-xs text-gray-400 truncate">{{ auth.user?.email }}</p>
+          </div>
+        </div>
+        <button
+          @click="logout"
+          class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+        >
+          <LogOut :size="16" />
+          Sign out
+        </button>
+      </div>
+    </aside>
+
+    <!-- Mobile Header -->
+    <header class="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-40">
+      <h1 class="text-lg font-bold text-gray-800">TVDE Tracker</h1>
+      <button @click="logout" class="text-sm text-gray-500 hover:text-red-500 transition-colors flex items-center gap-1">
+        <LogOut :size="16" />
+        Logout
+      </button>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-64 pb-20 lg:pb-0">
+      <router-view />
+    </main>
+
+    <!-- Mobile Bottom Nav -->
+    <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around py-1.5 z-50 safe-area-bottom">
+      <router-link
+        v-for="item in navItems"
+        :key="item.path"
+        :to="item.path"
+        class="flex flex-col items-center px-2 py-1 text-[10px] transition-colors min-w-[56px]"
+        :class="route.path === item.path ? 'text-blue-600' : 'text-gray-400'"
+      >
+        <component :is="item.icon" :size="22" :stroke-width="route.path === item.path ? 2 : 1.5" class="mb-0.5" />
+        <span :class="route.path === item.path ? 'font-semibold' : ''">{{ item.label }}</span>
+      </router-link>
+    </nav>
+  </div>
+</template>
+
+<style>
+.safe-area-bottom {
+  padding-bottom: max(0.375rem, env(safe-area-inset-bottom));
+}
+</style>
