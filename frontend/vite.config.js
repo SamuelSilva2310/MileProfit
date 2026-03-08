@@ -11,7 +11,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       manifest: {
         name: 'TVDE Earnings Tracker',
-        short_name: 'TVDE Tracker',
+        short_name: 'MileProfit',
         description: 'Track your TVDE driving earnings and expenses',
         theme_color: '#2563eb',
         background_color: '#f9fafb',
