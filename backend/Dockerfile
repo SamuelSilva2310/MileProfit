@@ -8,6 +8,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+# Ensure the app package is importable by alembic and uvicorn
+ENV PYTHONPATH=/app
+
 # SQLite data is mounted here at runtime
 VOLUME ["/data"]
 

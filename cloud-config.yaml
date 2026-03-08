@@ -32,27 +32,6 @@ packages:
   - docker.io
   - docker-compose-v2
 
-write_files:
-
-  # ── Host Nginx — SSL termination → Docker frontend container ───────────────
-  - path: /etc/nginx/sites-available/mileprofit
-    permissions: "0644"
-    content: |
-      server {
-          listen 80;
-          server_name yourdomain.com www.yourdomain.com;
-          # Certbot will add the SSL redirect here automatically
-          location / {
-              proxy_pass         http://127.0.0.1:3000;
-              proxy_http_version 1.1;
-              proxy_set_header   Host              $host;
-              proxy_set_header   X-Real-IP         $remote_addr;
-              proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
-              proxy_set_header   X-Forwarded-Proto $scheme;
-          }
-      }
-
-
 runcmd:
   # Firewall
   - ufw default deny incoming
@@ -69,9 +48,8 @@ runcmd:
   - systemctl enable docker
   - systemctl start docker
 
-  # Nginx — enable site, remove default
-  - ln -sf /etc/nginx/sites-available/mileprofit /etc/nginx/sites-enabled/mileprofit
+  # Nginx — placeholder config until the repo is cloned by the deploy script
   - rm -f /etc/nginx/sites-enabled/default
-  - nginx -t && systemctl reload nginx
+  - systemctl reload nginx
 
   - echo "Cloud-init complete. SSH in as 'parrot' and run: git clone <your-repo> /opt/mileprofit && /opt/mileprofit/deploy.sh"

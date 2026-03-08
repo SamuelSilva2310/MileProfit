@@ -40,9 +40,11 @@ docker compose -f "$APP_DIR/docker-compose.yml" up -d --build
 echo "▶ Pruning unused images..."
 docker image prune -f
 
-# ── 5. Reload Nginx (picks up any config changes) ────────────────────────────
-echo "▶ Reloading Nginx..."
-sudo systemctl reload nginx
+# ── 5. Install host Nginx config from repo ───────────────────────────────────
+echo "▶ Installing Nginx config..."
+sudo cp "$APP_DIR/nginx-host.conf" /etc/nginx/sites-available/mileprofit
+sudo ln -sf /etc/nginx/sites-available/mileprofit /etc/nginx/sites-enabled/mileprofit
+sudo nginx -t && sudo systemctl reload nginx
 
 echo ""
 echo "✓ MileProfit is up."
