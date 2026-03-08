@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { Plus, Receipt, Fuel, Wrench, Sparkles, Briefcase } from 'lucide-vue-next'
+import { Plus, Receipt, Fuel, Wrench, Sparkles, Briefcase, Pencil, Trash2 } from 'lucide-vue-next'
 import api from '../services/api'
 import { useDateBrowser } from '../composables/useDateBrowser'
 import { useToast } from '../composables/useToast'
@@ -93,6 +93,7 @@ function editItem(item) {
   form.value = { date: item.date, category: item.category, subcategory: item.subcategory || '', description: item.description || '', amount: item.amount, station_name: item.station_name || '', fuel_type: item.fuel_type || '', price_per_unit: item.price_per_unit || '', quantity: item.quantity || '' }
   editingId.value = item.id
   showForm.value = true
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 async function saveItem() {
@@ -139,7 +140,7 @@ watch([startDateISO, endDateISO], fetchItems)
   <div class="p-4 lg:p-8 max-w-4xl mx-auto">
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-xl lg:text-2xl font-bold text-gray-800">Expenses</h2>
-      <button @click="showForm = !showForm; if (!showForm) resetForm()" class="inline-flex items-center gap-1.5 bg-blue-600 text-white text-sm font-medium px-4 py-2.5 rounded-xl hover:bg-blue-700 transition-colors shadow-sm">
+      <button @click="showForm = !showForm; if (!showForm) resetForm()" class="inline-flex items-center gap-1.5 bg-blue-600 text-white text-sm font-medium px-4 py-2.5 rounded-xl hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm">
         <Plus v-if="!showForm" :size="16" />
         {{ showForm ? 'Cancel' : 'Add Expense' }}
       </button>
@@ -162,45 +163,54 @@ watch([startDateISO, endDateISO], fetchItems)
       </div>
     </div>
 
-    <form v-if="showForm" @submit.prevent="saveItem" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 mb-6 space-y-4">
-      <h3 class="text-sm font-semibold text-gray-700">{{ editingId ? 'Edit Expense' : 'New Expense' }}</h3>
+    <!-- Form -->
+    <Transition
+      enter-active-class="transition-all duration-200 ease-out"
+      enter-from-class="opacity-0 -translate-y-2"
+      enter-to-class="opacity-100 translate-y-0"
+      leave-active-class="transition-all duration-150 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0 -translate-y-1"
+    >
+      <form v-if="showForm" @submit.prevent="saveItem" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 mb-6 space-y-4">
+        <h3 class="text-sm font-semibold text-gray-700">{{ editingId ? 'Edit Expense' : 'New Expense' }}</h3>
 
-      <div>
-        <label class="block text-xs font-medium text-gray-500 mb-2">Category</label>
-        <div class="grid grid-cols-2 gap-2">
-          <button v-for="c in categories" :key="c.value" type="button" @click="form.category = c.value"
-            class="flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all"
-            :class="form.category === c.value ? 'border-blue-500 bg-blue-50 text-blue-700 ring-2 ring-blue-200' : 'border-gray-200 text-gray-600 hover:border-gray-300'">
-            <component :is="c.icon" :size="16" class="shrink-0" />
-            <span class="truncate">{{ c.label }}</span>
-          </button>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-2">Category</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button v-for="c in categories" :key="c.value" type="button" @click="form.category = c.value"
+              class="flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all"
+              :class="form.category === c.value ? 'border-blue-500 bg-blue-50 text-blue-700 ring-2 ring-blue-200' : 'border-gray-200 text-gray-600 hover:border-gray-300'">
+              <component :is="c.icon" :size="16" class="shrink-0" />
+              <span class="truncate">{{ c.label }}</span>
+            </button>
+          </div>
         </div>
-      </div>
 
-      <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="block text-xs font-medium text-gray-500 mb-1.5">Date</label>
           <input v-model="form.date" type="date" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
         </div>
+
         <div>
           <label class="block text-xs font-medium text-gray-500 mb-1.5">Amount (&#8364;)</label>
           <input v-model="form.amount" type="number" step="0.01" required placeholder="0.00" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
         </div>
-      </div>
 
-      <div>
-        <label class="block text-xs font-medium text-gray-500 mb-1.5">Description</label>
-        <input v-model="form.description" type="text" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" placeholder="Optional description" />
-      </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1.5">Description</label>
+          <input v-model="form.description" type="text" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" placeholder="Optional description" />
+        </div>
 
-      <template v-if="isFuel">
-        <div class="bg-amber-50 rounded-xl p-4 space-y-3 border border-amber-100">
-          <p class="text-xs font-semibold text-amber-700 uppercase tracking-wide">Fuel Details</p>
-          <div class="grid grid-cols-2 gap-3">
+        <template v-if="isFuel">
+          <div class="bg-amber-50 rounded-xl p-4 space-y-4 border border-amber-100">
+            <p class="text-xs font-semibold text-amber-700 uppercase tracking-wide">Fuel Details</p>
+
             <div>
               <label class="block text-xs font-medium text-gray-500 mb-1.5">Station</label>
               <input v-model="form.station_name" type="text" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow bg-white" placeholder="e.g. Galp" />
             </div>
+
             <div>
               <label class="block text-xs font-medium text-gray-500 mb-1.5">Fuel Type</label>
               <select v-model="form.fuel_type" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow bg-white">
@@ -211,22 +221,23 @@ watch([startDateISO, endDateISO], fetchItems)
                 <option value="electric">Electric</option>
               </select>
             </div>
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-medium text-gray-500 mb-1.5">Price / Unit (&#8364;)</label>
-              <input v-model="form.price_per_unit" type="number" step="0.001" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow bg-white" placeholder="1.650" />
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-gray-500 mb-1.5">Qty (L / kWh)</label>
-              <input v-model="form.quantity" type="number" step="0.01" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow bg-white" placeholder="27.27" />
-            </div>
-          </div>
-        </div>
-      </template>
 
-      <button type="submit" class="w-full bg-blue-600 text-white rounded-xl py-3 text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm">{{ editingId ? 'Update Expense' : 'Save Expense' }}</button>
-    </form>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1.5">Price / Unit (&#8364;)</label>
+                <input v-model="form.price_per_unit" type="number" step="0.001" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow bg-white" placeholder="1.650" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1.5">Qty (L / kWh)</label>
+                <input v-model="form.quantity" type="number" step="0.01" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow bg-white" placeholder="27.27" />
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <button type="submit" class="w-full bg-blue-600 text-white rounded-xl py-3.5 text-sm font-semibold hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm">{{ editingId ? 'Update Expense' : 'Save Expense' }}</button>
+      </form>
+    </Transition>
 
     <div v-if="loading" class="flex items-center justify-center py-16"><div class="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>
 
@@ -243,9 +254,9 @@ watch([startDateISO, endDateISO], fetchItems)
           <span class="text-xs font-medium text-rose-500">-{{ fmt(group.reduce((s, i) => s + i.amount, 0)) }}</span>
         </div>
         <div class="space-y-2">
-          <div v-for="item in group" :key="item.id" class="bg-white rounded-xl border border-gray-200 p-4 hover:border-gray-300 transition-colors group">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3">
+          <div v-for="item in group" :key="item.id" class="bg-white rounded-xl border border-gray-200 p-4 transition-colors">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-start gap-3 min-w-0">
                 <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" :class="getCategoryMeta(item.category).color">
                   <component :is="getCategoryMeta(item.category).icon" :size="20" :stroke-width="1.5" />
                 </div>
@@ -262,11 +273,15 @@ watch([startDateISO, endDateISO], fetchItems)
                   </p>
                 </div>
               </div>
-              <div class="text-right shrink-0 ml-2">
+              <div class="text-right shrink-0">
                 <p class="text-sm font-bold text-rose-500">-{{ fmt(item.amount) }}</p>
-                <div class="flex gap-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button @click="editItem(item)" class="text-xs text-gray-400 hover:text-blue-600">Edit</button>
-                  <button @click="deleteItem(item.id)" class="text-xs text-gray-400 hover:text-rose-500">Delete</button>
+                <div class="flex gap-1 mt-1.5 justify-end">
+                  <button @click="editItem(item)" class="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 active:bg-blue-100 transition-colors">
+                    <Pencil :size="14" />
+                  </button>
+                  <button @click="deleteItem(item.id)" class="p-1.5 rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-50 active:bg-rose-100 transition-colors">
+                    <Trash2 :size="14" />
+                  </button>
                 </div>
               </div>
             </div>

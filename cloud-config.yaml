@@ -1,0 +1,77 @@
+#cloud-config
+# Hetzner Cloud — MileProfit
+# Ubuntu 24.04 LTS
+#
+# Usage:
+#   1. Paste this file in the "User data" field when creating the Hetzner server
+#   2. After the server boots (~3 min), SSH in as 'parrot' and run:
+#        /opt/mileprofit/deploy.sh
+#   3. Point your domain's A record to the server IP, then run:
+#        sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
+# ─────────────────────────────────────────────────────────────────────────────
+
+hostname: mileprofit
+
+users:
+  - name: parrot
+    groups: [sudo, docker]
+    shell: /bin/bash
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    ssh_authorized_keys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCwRN2VZlUo6cfWdwglBtkYgTLvI1Is9AMUNXEw8VShhHt4dJzR/PGpHJy+FYYX89N641ohZDMZ/VXKLqT8ObjStXGeJLduZytTzU3r3bKDp4HJ5KJUAGK17QdhYz1RRIYoqcLIEcYSHn65KhMDJaWWtKVAzJTp0nXxYyKuK6/dEBVeqmdYvYVdF9A/78sj5CJ+vI+obXPuh7CuJCy0lKmx/UiqJqfO6oLyT9vVvMW2aM7T1AtjrWQI8DedPV7NBZ4es17hCNjR97cfnXVhTqNOxu2MfJ3QiJkMlxPMkUGuCClShbric9VdpuGQw4qUVhmB7t2Gha/KFB7I7Z/nc2LEpYQ8FmYsFEgviGwesTyVg9qMtrVu84V7c2X+XPh04cRNjvUROJdor7HR8Q3TcfAvapt4185FZkJzBh/H6y+5Q+JH9aBMDlLYaCK143Tbp/akzPHLZj6GxujSoZNdBckytjRRGB0X8ntN6uO4FbG9qqqpnCGzmmsqMF5IST5hoHM= samuel@DESKTOP-0P8HB18
+
+package_update: true
+package_upgrade: true
+packages:
+  - git
+  - nginx
+  - certbot
+  - python3-certbot-nginx
+  - ufw
+  - fail2ban
+  - docker.io
+  - docker-compose-v2
+
+write_files:
+
+  # ── Host Nginx — SSL termination → Docker frontend container ───────────────
+  - path: /etc/nginx/sites-available/mileprofit
+    permissions: "0644"
+    content: |
+      server {
+          listen 80;
+          server_name yourdomain.com www.yourdomain.com;
+          # Certbot will add the SSL redirect here automatically
+          location / {
+              proxy_pass         http://127.0.0.1:3000;
+              proxy_http_version 1.1;
+              proxy_set_header   Host              $host;
+              proxy_set_header   X-Real-IP         $remote_addr;
+              proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+              proxy_set_header   X-Forwarded-Proto $scheme;
+          }
+      }
+
+
+runcmd:
+  # Firewall
+  - ufw default deny incoming
+  - ufw default allow outgoing
+  - ufw allow OpenSSH
+  - ufw allow 'Nginx Full'
+  - ufw --force enable
+
+  # fail2ban
+  - systemctl enable fail2ban
+  - systemctl start fail2ban
+
+  # Docker
+  - systemctl enable docker
+  - systemctl start docker
+
+  # Nginx — enable site, remove default
+  - ln -sf /etc/nginx/sites-available/mileprofit /etc/nginx/sites-enabled/mileprofit
+  - rm -f /etc/nginx/sites-enabled/default
+  - nginx -t && systemctl reload nginx
+
+  - echo "Cloud-init complete. SSH in as 'parrot' and run: git clone <your-repo> /opt/mileprofit && /opt/mileprofit/deploy.sh"

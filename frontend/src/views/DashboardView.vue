@@ -232,7 +232,7 @@ watch(summary, (s) => {
         </div>
 
         <!-- Breakdown row: Net Profit | Expenses | Tax -->
-        <div class="mt-4 pt-4 border-t border-gray-100 grid grid-cols-3 gap-3">
+        <div class="mt-4 pt-4 border-t border-gray-100 grid grid-cols-2 gap-2">
           <div>
             <p class="text-[10px] sm:text-xs font-medium text-gray-400 uppercase tracking-wide mb-0.5">Net Profit</p>
             <p class="text-base sm:text-lg font-bold" :class="summary.net_profit >= 0 ? 'text-emerald-600' : 'text-rose-600'">
@@ -240,11 +240,13 @@ watch(summary, (s) => {
             </p>
             <p class="text-[10px] text-gray-400 mt-0.5 hidden sm:block">Earnings - Expenses</p>
           </div>
+          <!--
           <div>
             <p class="text-[10px] sm:text-xs font-medium text-gray-400 uppercase tracking-wide mb-0.5">Expenses</p>
             <p class="text-base sm:text-lg font-bold text-rose-500">-{{ fmt(summary.total_expenses) }}</p>
             <p class="text-[10px] text-gray-400 mt-0.5 hidden sm:block">All costs</p>
           </div>
+          -->
           <div>
             <div class="flex items-center gap-1 mb-0.5">
               <p class="text-[10px] sm:text-xs font-medium text-gray-400 uppercase tracking-wide">Est. Tax</p>

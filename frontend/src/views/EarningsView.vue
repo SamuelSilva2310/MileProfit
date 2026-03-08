@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { Plus, Coins } from 'lucide-vue-next'
+import { Plus, Coins, Pencil, Trash2 } from 'lucide-vue-next'
 import api from '../services/api'
 import { useDateBrowser } from '../composables/useDateBrowser'
 import { useToast } from '../composables/useToast'
@@ -14,7 +14,7 @@ const showForm = ref(false)
 const editingId = ref(null)
 const loading = ref(false)
 
-const platforms = ['Uber', 'Bolt', 'Private', 'Other']
+const platforms = ['Uber', 'Bolt', 'FreeNow', 'Private', 'Other']
 
 const form = ref(defaultForm())
 
@@ -79,6 +79,7 @@ function editItem(item) {
   form.value = { date: item.date, platform: item.platform, total_earnings: item.total_earnings, commission: item.commission, tips: item.tips, bonuses: item.bonuses }
   editingId.value = item.id
   showForm.value = true
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 async function saveItem() {
@@ -135,7 +136,7 @@ watch([startDateISO, endDateISO], fetchItems)
   <div class="p-4 lg:p-8 max-w-4xl mx-auto">
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-xl lg:text-2xl font-bold text-gray-800">Earnings</h2>
-      <button @click="showForm = !showForm; if (!showForm) resetForm()" class="inline-flex items-center gap-1.5 bg-blue-600 text-white text-sm font-medium px-4 py-2.5 rounded-xl hover:bg-blue-700 transition-colors shadow-sm">
+      <button @click="showForm = !showForm; if (!showForm) resetForm()" class="inline-flex items-center gap-1.5 bg-blue-600 text-white text-sm font-medium px-4 py-2.5 rounded-xl hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm">
         <Plus v-if="!showForm" :size="16" />
         {{ showForm ? 'Cancel' : 'Add Earning' }}
       </button>
@@ -158,40 +159,54 @@ watch([startDateISO, endDateISO], fetchItems)
       </div>
     </div>
 
-    <form v-if="showForm" @submit.prevent="saveItem" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 mb-6 space-y-4">
-      <h3 class="text-sm font-semibold text-gray-700">{{ editingId ? 'Edit Earning' : 'New Earning' }}</h3>
-      <div class="grid grid-cols-2 gap-3">
+    <!-- Form -->
+    <Transition
+      enter-active-class="transition-all duration-200 ease-out"
+      enter-from-class="opacity-0 -translate-y-2"
+      enter-to-class="opacity-100 translate-y-0"
+      leave-active-class="transition-all duration-150 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0 -translate-y-1"
+    >
+      <form v-if="showForm" @submit.prevent="saveItem" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 mb-6 space-y-4">
+        <h3 class="text-sm font-semibold text-gray-700">{{ editingId ? 'Edit Earning' : 'New Earning' }}</h3>
+
         <div>
           <label class="block text-xs font-medium text-gray-500 mb-1.5">Date</label>
           <input v-model="form.date" type="date" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
         </div>
+
         <div>
           <label class="block text-xs font-medium text-gray-500 mb-1.5">Platform</label>
           <select v-model="form.platform" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow bg-white">
             <option v-for="p in platforms" :key="p" :value="p">{{ p }}</option>
           </select>
         </div>
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-gray-500 mb-1.5">Earnings (&#8364;)</label>
-        <input v-model="form.total_earnings" type="number" step="0.01" required placeholder="0.00" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
-      </div>
-      <div class="grid grid-cols-3 gap-3">
+
         <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1.5">Commission</label>
-          <input v-model="form.commission" type="number" step="0.01" placeholder="0.00" class="w-full rounded-xl border border-gray-300 px-3 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
+          <label class="block text-xs font-medium text-gray-500 mb-1.5">Earnings (&#8364;)</label>
+          <input v-model="form.total_earnings" type="number" step="0.01" required placeholder="0.00" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
         </div>
+
         <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1.5">Tips</label>
-          <input v-model="form.tips" type="number" step="0.01" placeholder="0.00" class="w-full rounded-xl border border-gray-300 px-3 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
+          <label class="block text-xs font-medium text-gray-500 mb-1.5">Commission (&#8364;)</label>
+          <input v-model="form.commission" type="number" step="0.01" placeholder="0.00" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
         </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1.5">Bonuses</label>
-          <input v-model="form.bonuses" type="number" step="0.01" placeholder="0.00" class="w-full rounded-xl border border-gray-300 px-3 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1.5">Tips (&#8364;)</label>
+            <input v-model="form.tips" type="number" step="0.01" placeholder="0.00" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1.5">Bonuses (&#8364;)</label>
+            <input v-model="form.bonuses" type="number" step="0.01" placeholder="0.00" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
+          </div>
         </div>
-      </div>
-      <button type="submit" class="w-full bg-blue-600 text-white rounded-xl py-3 text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm">{{ editingId ? 'Update Earning' : 'Save Earning' }}</button>
-    </form>
+
+        <button type="submit" class="w-full bg-blue-600 text-white rounded-xl py-3.5 text-sm font-semibold hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm">{{ editingId ? 'Update Earning' : 'Save Earning' }}</button>
+      </form>
+    </Transition>
 
     <div v-if="loading" class="flex items-center justify-center py-16"><div class="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>
 
@@ -208,11 +223,11 @@ watch([startDateISO, endDateISO], fetchItems)
           <span class="text-xs font-medium text-green-600">{{ fmt(group.reduce((s, i) => s + i.total_earnings + i.tips + i.bonuses, 0)) }}</span>
         </div>
         <div class="space-y-2">
-          <div v-for="item in group" :key="item.id" class="bg-white rounded-xl border border-gray-200 p-4 hover:border-gray-300 transition-colors group">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <span class="text-xs font-semibold px-2.5 py-1 rounded-lg shrink-0" :class="[getPlatformStyle(item.platform).bg, getPlatformStyle(item.platform).text]">{{ item.platform }}</span>
-                <div>
+          <div v-for="item in group" :key="item.id" class="bg-white rounded-xl border border-gray-200 p-4 transition-colors">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-start gap-3 min-w-0">
+                <span class="text-xs font-semibold px-2.5 py-1 rounded-lg shrink-0 mt-0.5" :class="[getPlatformStyle(item.platform).bg, getPlatformStyle(item.platform).text]">{{ item.platform }}</span>
+                <div class="min-w-0">
                   <p class="text-sm font-medium text-gray-800">{{ formatDate(item.date) }} {{ monthLabel(item.date.slice(0, 7)).split(' ')[0] }}</p>
                   <div class="flex flex-wrap gap-x-3 text-xs text-gray-400 mt-0.5">
                     <span v-if="item.tips > 0">Tips: {{ fmt(item.tips) }}</span>
@@ -221,11 +236,15 @@ watch([startDateISO, endDateISO], fetchItems)
                   </div>
                 </div>
               </div>
-              <div class="text-right">
+              <div class="text-right shrink-0">
                 <p class="text-sm font-bold text-green-600">{{ fmt(item.total_earnings) }}</p>
-                <div class="flex gap-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button @click="editItem(item)" class="text-xs text-gray-400 hover:text-blue-600">Edit</button>
-                  <button @click="deleteItem(item.id)" class="text-xs text-gray-400 hover:text-rose-500">Delete</button>
+                <div class="flex gap-1 mt-1.5 justify-end">
+                  <button @click="editItem(item)" class="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 active:bg-blue-100 transition-colors">
+                    <Pencil :size="14" />
+                  </button>
+                  <button @click="deleteItem(item.id)" class="p-1.5 rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-50 active:bg-rose-100 transition-colors">
+                    <Trash2 :size="14" />
+                  </button>
                 </div>
               </div>
             </div>

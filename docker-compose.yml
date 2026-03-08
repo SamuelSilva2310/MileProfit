@@ -1,0 +1,38 @@
+services:
+
+  backend:
+    build: ./backend
+    container_name: mileprofit-backend
+    restart: unless-stopped
+    env_file: ./backend/.env
+    volumes:
+      - db_data:/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  frontend:
+    build: ./frontend
+    container_name: mileprofit-frontend
+    restart: unless-stopped
+    ports:
+      # Exposed to host only — host Nginx handles SSL and forwards here
+      - "127.0.0.1:3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  db_data:
+    name: mileprofit-db
