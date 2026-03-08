@@ -106,17 +106,14 @@ async def seed_data(email: str, days: int = 60):
             for platform in chosen:
                 base_earning = daily_km * random.uniform(0.5, 0.9) / len(chosen)
                 tip = round(random.uniform(0, 5), 2) if random.random() < 0.3 else 0.0
-                bonus = round(random.uniform(5, 20), 2) if random.random() < 0.15 else 0.0
-                commission = round(base_earning * random.uniform(0.20, 0.30), 2)
 
                 earnings.append(Earning(
                     user_id=user.id,
                     date=d,
                     platform=platform,
                     total_earnings=round(base_earning, 2),
-                    commission=commission,
                     tips=tip,
-                    bonuses=bonus,
+                    is_taxable=platform != "Private",
                 ))
 
             if random.random() < 0.25:

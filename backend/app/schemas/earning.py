@@ -7,18 +7,16 @@ class EarningCreate(BaseModel):
     date: datetime.date
     platform: str
     total_earnings: float
-    commission: float = 0.0
     tips: float = 0.0
-    bonuses: float = 0.0
+    is_taxable: bool = True
 
 
 class EarningUpdate(BaseModel):
     date: datetime.date | None = None
     platform: str | None = None
     total_earnings: float | None = None
-    commission: float | None = None
     tips: float | None = None
-    bonuses: float | None = None
+    is_taxable: bool | None = None
 
 
 class EarningResponse(BaseModel):
@@ -26,8 +24,7 @@ class EarningResponse(BaseModel):
     date: datetime.date
     platform: str
     total_earnings: float
-    commission: float
     tips: float
-    bonuses: float
+    is_taxable: bool
 
     model_config = {"from_attributes": True}

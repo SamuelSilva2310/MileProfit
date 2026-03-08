@@ -57,7 +57,6 @@ async def get_summary(
         select(
             func.coalesce(func.sum(Earning.total_earnings), 0),
             func.coalesce(func.sum(Earning.tips), 0),
-            func.coalesce(func.sum(Earning.bonuses), 0),
         ).where(
             Earning.user_id == user.id,
             Earning.date >= start_date,
@@ -65,7 +64,21 @@ async def get_summary(
         )
     )
     row = earnings_result.one()
-    total_earnings = float(row[0]) + float(row[1]) + float(row[2])
+    total_earnings = float(row[0]) + float(row[1])
+
+    taxable_result = await db.execute(
+        select(
+            func.coalesce(func.sum(Earning.total_earnings), 0),
+            func.coalesce(func.sum(Earning.tips), 0),
+        ).where(
+            Earning.user_id == user.id,
+            Earning.date >= start_date,
+            Earning.date <= end_date,
+            Earning.is_taxable == True,  # noqa: E712
+        )
+    )
+    tax_row = taxable_result.one()
+    taxable_earnings = float(tax_row[0]) + float(tax_row[1])
 
     expenses_result = await db.execute(
         select(func.coalesce(func.sum(Expense.amount), 0)).where(
@@ -104,7 +117,7 @@ async def get_summary(
             total_hours += (e_secs - s_secs) / 3600
 
     net_profit = total_earnings - total_expenses
-    estimated_tax = total_earnings * (user.tax_percent / 100) if user.tax_percent else 0.0
+    estimated_tax = taxable_earnings * (user.tax_percent / 100) if user.tax_percent else 0.0
 
     return DashboardSummary(
         total_earnings=round(total_earnings, 2),
@@ -135,7 +148,7 @@ async def get_timeseries(
     earnings_rows = await db.execute(
         select(
             Earning.date,
-            func.sum(Earning.total_earnings + Earning.tips + Earning.bonuses),
+            func.sum(Earning.total_earnings + Earning.tips),
         )
         .where(
             Earning.user_id == user.id,
@@ -203,7 +216,7 @@ async def get_earnings_by_platform(
     rows = await db.execute(
         select(
             Earning.platform,
-            func.sum(Earning.total_earnings + Earning.tips + Earning.bonuses),
+            func.sum(Earning.total_earnings + Earning.tips),
         )
         .where(
             Earning.user_id == user.id,
