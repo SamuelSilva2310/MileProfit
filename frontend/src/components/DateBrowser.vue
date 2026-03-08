@@ -1,5 +1,8 @@
 <script setup>
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { useI18n } from '../i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   rangeLabel: String,
@@ -19,21 +22,21 @@ const emit = defineEmits(['prev', 'next', 'today', 'update:viewMode'])
       <div class="flex flex-col items-center gap-1.5 min-w-0">
         <span class="text-sm font-semibold text-gray-700 truncate">{{ rangeLabel }}</span>
         <div class="flex items-center gap-2">
-          <button @click="emit('today')" class="text-xs text-blue-600 font-medium hover:underline px-1">Today</button>
+          <button @click="emit('today')" class="text-xs text-blue-600 font-medium hover:underline px-1">{{ t('dateBrowser.today') }}</button>
           <div class="flex bg-gray-100 rounded-lg p-0.5">
             <button
               @click="emit('update:viewMode', 'week')"
               class="px-2.5 py-1 rounded-md text-xs font-medium transition-colors"
               :class="viewMode === 'week' ? 'bg-white shadow-sm text-gray-700' : 'text-gray-400'"
             >
-              Week
+              {{ t('dateBrowser.week') }}
             </button>
             <button
               @click="emit('update:viewMode', 'month')"
               class="px-2.5 py-1 rounded-md text-xs font-medium transition-colors"
               :class="viewMode === 'month' ? 'bg-white shadow-sm text-gray-700' : 'text-gray-400'"
             >
-              Month
+              {{ t('dateBrowser.month') }}
             </button>
           </div>
         </div>

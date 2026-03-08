@@ -3,7 +3,9 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { Coins, AlertTriangle } from 'lucide-vue-next'
+import { useI18n } from '../i18n'
 
+const { t } = useI18n()
 const auth = useAuthStore()
 const router = useRouter()
 
@@ -33,8 +35,8 @@ async function handleLogin() {
         <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-200">
           <Coins :size="32" class="text-white" :stroke-width="1.5" />
         </div>
-        <h1 class="text-2xl font-bold text-gray-800">TVDE Tracker</h1>
-        <p class="text-gray-400 text-sm mt-1">Track your earnings and expenses</p>
+        <h1 class="text-2xl font-bold text-gray-800">{{ t('login.title') }}</h1>
+        <p class="text-gray-400 text-sm mt-1">{{ t('login.subtitle') }}</p>
       </div>
 
       <form @submit.prevent="handleLogin" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-4">
@@ -50,7 +52,7 @@ async function handleLogin() {
         </Transition>
 
         <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1.5">Email</label>
+          <label class="block text-xs font-medium text-gray-500 mb-1.5">{{ t('login.email') }}</label>
           <input
             v-model="email"
             type="email"
@@ -61,13 +63,12 @@ async function handleLogin() {
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1.5">Password</label>
+          <label class="block text-xs font-medium text-gray-500 mb-1.5">{{ t('login.password') }}</label>
           <input
             v-model="password"
             type="password"
             required
             class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow"
-            placeholder="Enter your password"
           />
         </div>
 
@@ -76,7 +77,7 @@ async function handleLogin() {
           :disabled="loading"
           class="w-full bg-blue-600 text-white rounded-xl py-3 text-sm font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors shadow-sm"
         >
-          {{ loading ? 'Signing in...' : 'Sign In' }}
+          {{ loading ? t('login.signingIn') : t('login.signIn') }}
         </button>
       </form>
     </div>

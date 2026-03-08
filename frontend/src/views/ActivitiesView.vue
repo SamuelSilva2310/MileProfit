@@ -5,7 +5,9 @@ import api from '../services/api'
 import { useDateBrowser } from '../composables/useDateBrowser'
 import { useToast } from '../composables/useToast'
 import DateBrowser from '../components/DateBrowser.vue'
+import { useI18n } from '../i18n'
 
+const { t } = useI18n()
 const { viewMode, rangeLabel, startDateISO, endDateISO, prev, next, goToday } = useDateBrowser()
 const toast = useToast()
 
@@ -42,7 +44,7 @@ const grouped = computed(() => {
 
 function monthLabel(key) {
   const [y, m] = key.split('-')
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const months = t('months.short')
   return `${months[parseInt(m) - 1]} ${y}`
 }
 
@@ -88,32 +90,32 @@ async function saveItem() {
   try {
     if (editingId.value) {
       await api.put(`/activities/${editingId.value}`, payload)
-      toast.success('Activity updated')
+      toast.success(t('activities.updated'))
     } else {
       await api.post('/activities/', payload)
-      toast.success('Activity logged')
+      toast.success(t('activities.logged'))
     }
     resetForm()
     await fetchItems()
   } catch (e) {
-    toast.error(e.response?.data?.detail || 'Failed to save activity')
+    toast.error(e.response?.data?.detail || t('activities.saveFailed'))
   }
 }
 
 async function deleteItem(id) {
-  if (!confirm('Delete this activity?')) return
+  if (!confirm(t('activities.deleteConfirm'))) return
   try {
     await api.delete(`/activities/${id}`)
-    toast.success('Activity deleted')
+    toast.success(t('activities.deleted'))
     await fetchItems()
   } catch (e) {
-    toast.error('Failed to delete activity')
+    toast.error(t('activities.deleteFailed'))
   }
 }
 
 function formatDate(d) {
   const date = new Date(d + 'T00:00:00')
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const days = t('days.short')
   return `${days[date.getDay()]}, ${date.getDate()}`
 }
 
@@ -124,13 +126,13 @@ watch([startDateISO, endDateISO], fetchItems)
 <template>
   <div class="p-4 lg:p-8 max-w-4xl mx-auto">
     <div class="flex items-center justify-between mb-4">
-      <h2 class="text-xl lg:text-2xl font-bold text-gray-800">Daily Activity</h2>
+      <h2 class="text-xl lg:text-2xl font-bold text-gray-800">{{ t('activities.title') }}</h2>
       <button
         @click="showForm = !showForm; if (!showForm) resetForm()"
         class="inline-flex items-center gap-1.5 bg-blue-600 text-white text-sm font-medium px-4 py-2.5 rounded-xl hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm"
       >
         <Plus v-if="!showForm" :size="16" />
-        {{ showForm ? 'Cancel' : 'Log Activity' }}
+        {{ showForm ? t('common.cancel') : t('activities.log') }}
       </button>
     </div>
 
@@ -145,15 +147,15 @@ watch([startDateISO, endDateISO], fetchItems)
 
     <div v-if="items.length" class="grid grid-cols-3 gap-3 mb-6">
       <div class="bg-white rounded-xl border border-gray-200 p-3 text-center">
-        <p class="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wide">Entries</p>
+        <p class="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wide">{{ t('activities.entries') }}</p>
         <p class="text-lg font-bold text-gray-800 mt-0.5">{{ totalEntries }}</p>
       </div>
       <div class="bg-white rounded-xl border border-gray-200 p-3 text-center">
-        <p class="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wide">Total KM</p>
+        <p class="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wide">{{ t('activities.totalKm') }}</p>
         <p class="text-lg font-bold text-blue-600 mt-0.5">{{ totalKm.toFixed(1) }}</p>
       </div>
       <div class="bg-white rounded-xl border border-gray-200 p-3 text-center">
-        <p class="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wide">Avg / Day</p>
+        <p class="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wide">{{ t('activities.avgPerDay') }}</p>
         <p class="text-lg font-bold text-amber-600 mt-0.5">{{ avgKm.toFixed(1) }}</p>
       </div>
     </div>
@@ -168,36 +170,36 @@ watch([startDateISO, endDateISO], fetchItems)
       leave-to-class="opacity-0 -translate-y-1"
     >
       <form v-if="showForm" @submit.prevent="saveItem" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 mb-6 space-y-4">
-        <h3 class="text-sm font-semibold text-gray-700">{{ editingId ? 'Edit Activity' : 'New Activity' }}</h3>
+        <h3 class="text-sm font-semibold text-gray-700">{{ editingId ? t('activities.edit') : t('activities.new') }}</h3>
 
         <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1.5">Date</label>
+          <label class="block text-xs font-medium text-gray-500 mb-1.5">{{ t('activities.date') }}</label>
           <input v-model="form.date" type="date" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1.5">Start KM</label>
+          <label class="block text-xs font-medium text-gray-500 mb-1.5">{{ t('activities.startKm') }}</label>
           <input v-model="form.start_km" type="number" step="0.1" required placeholder="0.0" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1.5">End KM</label>
+          <label class="block text-xs font-medium text-gray-500 mb-1.5">{{ t('activities.endKm') }}</label>
           <input v-model="form.end_km" type="number" step="0.1" required placeholder="0.0" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-medium text-gray-500 mb-1.5">Start Time</label>
+            <label class="block text-xs font-medium text-gray-500 mb-1.5">{{ t('activities.startTime') }}</label>
             <input v-model="form.start_time" type="time" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
           </div>
           <div>
-            <label class="block text-xs font-medium text-gray-500 mb-1.5">End Time</label>
+            <label class="block text-xs font-medium text-gray-500 mb-1.5">{{ t('activities.endTime') }}</label>
             <input v-model="form.end_time" type="time" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
           </div>
         </div>
 
         <button type="submit" class="w-full bg-blue-600 text-white rounded-xl py-3.5 text-sm font-semibold hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm">
-          {{ editingId ? 'Update Activity' : 'Save Activity' }}
+          {{ editingId ? t('activities.update') : t('activities.save') }}
         </button>
       </form>
     </Transition>
@@ -208,7 +210,7 @@ watch([startDateISO, endDateISO], fetchItems)
 
     <div v-else-if="items.length === 0" class="text-center py-16">
       <MapPinned :size="48" class="text-gray-300 mx-auto mb-3" :stroke-width="1" />
-      <p class="text-gray-400 text-sm">No activities for this period</p>
+      <p class="text-gray-400 text-sm">{{ t('activities.empty') }}</p>
     </div>
 
     <div v-else class="space-y-6">

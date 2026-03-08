@@ -1,11 +1,13 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { Plus, Coins, Pencil, Trash2 } from 'lucide-vue-next'
+import { Plus, Coins, Pencil, Trash2, ShieldCheck } from 'lucide-vue-next'
 import api from '../services/api'
 import { useDateBrowser } from '../composables/useDateBrowser'
 import { useToast } from '../composables/useToast'
 import DateBrowser from '../components/DateBrowser.vue'
+import { useI18n } from '../i18n'
 
+const { t } = useI18n()
 const { viewMode, rangeLabel, startDateISO, endDateISO, prev, next, goToday } = useDateBrowser()
 const toast = useToast()
 
@@ -15,6 +17,7 @@ const editingId = ref(null)
 const loading = ref(false)
 
 const platforms = ['Uber', 'Bolt', 'FreeNow', 'Private', 'Other']
+const NON_TAXABLE_PLATFORMS = ['Private']
 
 const form = ref(defaultForm())
 
@@ -23,20 +26,19 @@ function defaultForm() {
     date: new Date().toISOString().slice(0, 10),
     platform: 'Uber',
     total_earnings: '',
-    commission: '',
     tips: '',
-    bonuses: '',
+    is_taxable: true,
   }
 }
 
-const totalEarnings = computed(() => items.value.reduce((sum, i) => sum + i.total_earnings + i.tips + i.bonuses, 0))
+const totalEarnings = computed(() => items.value.reduce((sum, i) => sum + i.total_earnings + i.tips, 0))
 const totalTips = computed(() => items.value.reduce((sum, i) => sum + i.tips, 0))
 
 const platformTotals = computed(() => {
   const map = {}
   for (const item of items.value) {
     if (!map[item.platform]) map[item.platform] = 0
-    map[item.platform] += item.total_earnings + item.tips + item.bonuses
+    map[item.platform] += item.total_earnings + item.tips
   }
   return Object.entries(map).sort(([, a], [, b]) => b - a)
 })
@@ -53,7 +55,7 @@ const grouped = computed(() => {
 
 function monthLabel(key) {
   const [y, m] = key.split('-')
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const months = t('months.short')
   return `${months[parseInt(m) - 1]} ${y}`
 }
 
@@ -76,37 +78,51 @@ function resetForm() {
 }
 
 function editItem(item) {
-  form.value = { date: item.date, platform: item.platform, total_earnings: item.total_earnings, commission: item.commission, tips: item.tips, bonuses: item.bonuses }
+  form.value = {
+    date: item.date,
+    platform: item.platform,
+    total_earnings: item.total_earnings,
+    tips: item.tips,
+    is_taxable: item.is_taxable ?? true,
+  }
   editingId.value = item.id
   showForm.value = true
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
+watch(() => form.value.platform, (newPlatform) => {
+  form.value.is_taxable = !NON_TAXABLE_PLATFORMS.includes(newPlatform)
+})
+
 async function saveItem() {
-  const payload = { ...form.value, total_earnings: parseFloat(form.value.total_earnings) || 0, commission: parseFloat(form.value.commission) || 0, tips: parseFloat(form.value.tips) || 0, bonuses: parseFloat(form.value.bonuses) || 0 }
+  const payload = {
+    ...form.value,
+    total_earnings: parseFloat(form.value.total_earnings) || 0,
+    tips: parseFloat(form.value.tips) || 0,
+  }
   try {
     if (editingId.value) {
       await api.put(`/earnings/${editingId.value}`, payload)
-      toast.success('Earning updated')
+      toast.success(t('earnings.updated'))
     } else {
       await api.post('/earnings/', payload)
-      toast.success('Earning added')
+      toast.success(t('earnings.added'))
     }
     resetForm()
     await fetchItems()
   } catch (e) {
-    toast.error(e.response?.data?.detail || 'Failed to save earning')
+    toast.error(e.response?.data?.detail || t('earnings.saveFailed'))
   }
 }
 
 async function deleteItem(id) {
-  if (!confirm('Delete this earning?')) return
+  if (!confirm(t('earnings.deleteConfirm'))) return
   try {
     await api.delete(`/earnings/${id}`)
-    toast.success('Earning deleted')
+    toast.success(t('earnings.deleted'))
     await fetchItems()
   } catch (e) {
-    toast.error('Failed to delete earning')
+    toast.error(t('earnings.deleteFailed'))
   }
 }
 
@@ -114,7 +130,7 @@ function fmt(v) { return `\u20AC${Number(v).toFixed(2)}` }
 
 function formatDate(d) {
   const date = new Date(d + 'T00:00:00')
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const days = t('days.short')
   return `${days[date.getDay()]}, ${date.getDate()}`
 }
 
@@ -135,10 +151,10 @@ watch([startDateISO, endDateISO], fetchItems)
 <template>
   <div class="p-4 lg:p-8 max-w-4xl mx-auto">
     <div class="flex items-center justify-between mb-4">
-      <h2 class="text-xl lg:text-2xl font-bold text-gray-800">Earnings</h2>
+      <h2 class="text-xl lg:text-2xl font-bold text-gray-800">{{ t('earnings.title') }}</h2>
       <button @click="showForm = !showForm; if (!showForm) resetForm()" class="inline-flex items-center gap-1.5 bg-blue-600 text-white text-sm font-medium px-4 py-2.5 rounded-xl hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm">
         <Plus v-if="!showForm" :size="16" />
-        {{ showForm ? 'Cancel' : 'Add Earning' }}
+        {{ showForm ? t('common.cancel') : t('earnings.add') }}
       </button>
     </div>
 
@@ -146,11 +162,11 @@ watch([startDateISO, endDateISO], fetchItems)
 
     <div v-if="items.length" class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
       <div class="bg-white rounded-xl border border-gray-200 p-3">
-        <p class="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wide">Total</p>
+        <p class="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wide">{{ t('earnings.total') }}</p>
         <p class="text-lg font-bold text-green-600 mt-0.5">{{ fmt(totalEarnings) }}</p>
       </div>
       <div class="bg-white rounded-xl border border-gray-200 p-3">
-        <p class="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wide">Tips</p>
+        <p class="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wide">{{ t('earnings.tips').replace(' (€)', '') }}</p>
         <p class="text-lg font-bold text-amber-600 mt-0.5">{{ fmt(totalTips) }}</p>
       </div>
       <div v-for="[platform, total] in platformTotals.slice(0, 2)" :key="platform" class="bg-white rounded-xl border border-gray-200 p-3">
@@ -169,42 +185,31 @@ watch([startDateISO, endDateISO], fetchItems)
       leave-to-class="opacity-0 -translate-y-1"
     >
       <form v-if="showForm" @submit.prevent="saveItem" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 mb-6 space-y-4">
-        <h3 class="text-sm font-semibold text-gray-700">{{ editingId ? 'Edit Earning' : 'New Earning' }}</h3>
+        <h3 class="text-sm font-semibold text-gray-700">{{ editingId ? t('earnings.edit') : t('earnings.new') }}</h3>
 
         <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1.5">Date</label>
+          <label class="block text-xs font-medium text-gray-500 mb-1.5">{{ t('earnings.date') }}</label>
           <input v-model="form.date" type="date" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1.5">Platform</label>
+          <label class="block text-xs font-medium text-gray-500 mb-1.5">{{ t('earnings.platform') }}</label>
           <select v-model="form.platform" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow bg-white">
             <option v-for="p in platforms" :key="p" :value="p">{{ p }}</option>
           </select>
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1.5">Earnings (&#8364;)</label>
+          <label class="block text-xs font-medium text-gray-500 mb-1.5">{{ t('earnings.amount') }}</label>
           <input v-model="form.total_earnings" type="number" step="0.01" required placeholder="0.00" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1.5">Commission (&#8364;)</label>
-          <input v-model="form.commission" type="number" step="0.01" placeholder="0.00" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
+          <label class="block text-xs font-medium text-gray-500 mb-1.5">{{ t('earnings.tips') }}</label>
+          <input v-model="form.tips" type="number" step="0.01" placeholder="0.00" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-medium text-gray-500 mb-1.5">Tips (&#8364;)</label>
-            <input v-model="form.tips" type="number" step="0.01" placeholder="0.00" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-500 mb-1.5">Bonuses (&#8364;)</label>
-            <input v-model="form.bonuses" type="number" step="0.01" placeholder="0.00" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
-          </div>
-        </div>
-
-        <button type="submit" class="w-full bg-blue-600 text-white rounded-xl py-3.5 text-sm font-semibold hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm">{{ editingId ? 'Update Earning' : 'Save Earning' }}</button>
+        <button type="submit" class="w-full bg-blue-600 text-white rounded-xl py-3.5 text-sm font-semibold hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm">{{ editingId ? t('earnings.update') : t('earnings.save') }}</button>
       </form>
     </Transition>
 
@@ -212,7 +217,7 @@ watch([startDateISO, endDateISO], fetchItems)
 
     <div v-else-if="items.length === 0" class="text-center py-16">
       <Coins :size="48" class="text-gray-300 mx-auto mb-3" :stroke-width="1" />
-      <p class="text-gray-400 text-sm">No earnings for this period</p>
+      <p class="text-gray-400 text-sm">{{ t('earnings.empty') }}</p>
     </div>
 
     <div v-else class="space-y-6">
@@ -220,7 +225,7 @@ watch([startDateISO, endDateISO], fetchItems)
         <div class="flex items-center gap-2 mb-2 px-1">
           <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ monthLabel(month) }}</h3>
           <div class="flex-1 h-px bg-gray-200"></div>
-          <span class="text-xs font-medium text-green-600">{{ fmt(group.reduce((s, i) => s + i.total_earnings + i.tips + i.bonuses, 0)) }}</span>
+          <span class="text-xs font-medium text-green-600">{{ fmt(group.reduce((s, i) => s + i.total_earnings + i.tips, 0)) }}</span>
         </div>
         <div class="space-y-2">
           <div v-for="item in group" :key="item.id" class="bg-white rounded-xl border border-gray-200 p-4 transition-colors">
@@ -230,9 +235,8 @@ watch([startDateISO, endDateISO], fetchItems)
                 <div class="min-w-0">
                   <p class="text-sm font-medium text-gray-800">{{ formatDate(item.date) }} {{ monthLabel(item.date.slice(0, 7)).split(' ')[0] }}</p>
                   <div class="flex flex-wrap gap-x-3 text-xs text-gray-400 mt-0.5">
-                    <span v-if="item.tips > 0">Tips: {{ fmt(item.tips) }}</span>
-                    <span v-if="item.bonuses > 0">Bonus: {{ fmt(item.bonuses) }}</span>
-                    <span v-if="item.commission > 0">Comm: {{ fmt(item.commission) }}</span>
+                    <span v-if="item.tips > 0">{{ t('earnings.tips').replace(' (€)', '') }}: {{ fmt(item.tips) }}</span>
+                    <span v-if="item.is_taxable === false" class="text-emerald-500 font-medium flex items-center gap-0.5"><ShieldCheck :size="12" />{{ t('earnings.notTaxable') }}</span>
                   </div>
                 </div>
               </div>

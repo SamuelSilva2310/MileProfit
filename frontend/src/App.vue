@@ -3,10 +3,12 @@ import { useAuthStore } from './stores/auth'
 import { useRouter, useRoute } from 'vue-router'
 import { LayoutDashboard, MapPinned, Coins, Receipt, UserRound, LogOut } from 'lucide-vue-next'
 import ToastContainer from './components/ToastContainer.vue'
+import { useI18n } from './i18n'
 
 const auth = useAuthStore()
 const router = useRouter()
 const route = useRoute()
+const { t } = useI18n()
 
 function logout() {
   auth.logout()
@@ -14,11 +16,11 @@ function logout() {
 }
 
 const navItems = [
-  { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/activities', label: 'Activity', icon: MapPinned },
-  { path: '/earnings', label: 'Earnings', icon: Coins },
-  { path: '/expenses', label: 'Expenses', icon: Receipt },
-  { path: '/profile', label: 'Profile', icon: UserRound },
+  { path: '/', labelKey: 'nav.dashboard', icon: LayoutDashboard },
+  { path: '/activities', labelKey: 'nav.activity', icon: MapPinned },
+  { path: '/earnings', labelKey: 'nav.earnings', icon: Coins },
+  { path: '/expenses', labelKey: 'nav.expenses', icon: Receipt },
+  { path: '/profile', labelKey: 'nav.profile', icon: UserRound },
 ]
 </script>
 
@@ -32,8 +34,8 @@ const navItems = [
     <!-- Desktop Sidebar -->
     <aside class="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-white border-r border-gray-200">
       <div class="px-6 py-5 border-b border-gray-100">
-        <h1 class="text-xl font-bold text-gray-800 tracking-tight">TVDE Tracker</h1>
-        <p class="text-xs text-gray-400 mt-0.5">Earnings & Expense Manager</p>
+        <h1 class="text-xl font-bold text-gray-800 tracking-tight">{{ t('app.title') }}</h1>
+        <p class="text-xs text-gray-400 mt-0.5">{{ t('app.subtitle') }}</p>
       </div>
 
       <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
@@ -47,7 +49,7 @@ const navItems = [
             : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'"
         >
           <component :is="item.icon" :size="20" :stroke-width="1.5" class="shrink-0" />
-          {{ item.label }}
+          {{ t(item.labelKey) }}
         </router-link>
       </nav>
 
@@ -66,17 +68,17 @@ const navItems = [
           class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors"
         >
           <LogOut :size="16" />
-          Sign out
+          {{ t('nav.signOut') }}
         </button>
       </div>
     </aside>
 
     <!-- Mobile Header -->
     <header class="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-40">
-      <h1 class="text-lg font-bold text-gray-800">TVDE Tracker</h1>
+      <h1 class="text-lg font-bold text-gray-800">{{ t('app.title') }}</h1>
       <button @click="logout" class="text-sm text-gray-500 hover:text-red-500 transition-colors flex items-center gap-1">
         <LogOut :size="16" />
-        Logout
+        {{ t('nav.logout') }}
       </button>
     </header>
 
@@ -95,7 +97,7 @@ const navItems = [
         :class="route.path === item.path ? 'text-blue-600' : 'text-gray-400'"
       >
         <component :is="item.icon" :size="22" :stroke-width="route.path === item.path ? 2 : 1.5" class="mb-0.5" />
-        <span :class="route.path === item.path ? 'font-semibold' : ''">{{ item.label }}</span>
+        <span :class="route.path === item.path ? 'font-semibold' : ''">{{ t(item.labelKey) }}</span>
       </router-link>
     </nav>
   </div>

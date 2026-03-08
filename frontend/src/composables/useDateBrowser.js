@@ -1,7 +1,9 @@
 import { ref, computed } from 'vue'
+import { useI18n } from '../i18n'
 
 export function useDateBrowser() {
-  const viewMode = ref('month') // 'month' | 'week'
+  const { t } = useI18n()
+  const viewMode = ref('month')
   const currentDate = ref(new Date())
 
   function startOfWeek(d) {
@@ -31,7 +33,7 @@ export function useDateBrowser() {
   })
 
   const rangeLabel = computed(() => {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const months = t('months.short')
     if (viewMode.value === 'week') {
       const s = rangeStart.value
       const e = rangeEnd.value

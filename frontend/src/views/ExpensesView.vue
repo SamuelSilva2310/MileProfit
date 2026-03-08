@@ -5,7 +5,9 @@ import api from '../services/api'
 import { useDateBrowser } from '../composables/useDateBrowser'
 import { useToast } from '../composables/useToast'
 import DateBrowser from '../components/DateBrowser.vue'
+import { useI18n } from '../i18n'
 
+const { t } = useI18n()
 const { viewMode, rangeLabel, startDateISO, endDateISO, prev, next, goToday } = useDateBrowser()
 const toast = useToast()
 
@@ -15,11 +17,17 @@ const editingId = ref(null)
 const loading = ref(false)
 
 const categories = [
-  { value: 'fuel_charging', label: 'Fuel / Charging', color: 'bg-amber-100 text-amber-700', icon: Fuel },
-  { value: 'maintenance', label: 'Maintenance', color: 'bg-indigo-100 text-indigo-700', icon: Wrench },
-  { value: 'improvements', label: 'Improvements', color: 'bg-pink-100 text-pink-700', icon: Sparkles },
-  { value: 'operational', label: 'Operational', color: 'bg-teal-100 text-teal-700', icon: Briefcase },
+  { value: 'fuel_charging', icon: Fuel },
+  { value: 'maintenance', icon: Wrench },
+  { value: 'improvements', icon: Sparkles },
+  { value: 'operational', icon: Briefcase },
 ]
+const categoryColors = {
+  fuel_charging: 'bg-amber-100 text-amber-700',
+  maintenance: 'bg-indigo-100 text-indigo-700',
+  improvements: 'bg-pink-100 text-pink-700',
+  operational: 'bg-teal-100 text-teal-700',
+}
 
 const form = ref(defaultForm())
 
@@ -63,12 +71,17 @@ const grouped = computed(() => {
 
 function monthLabel(key) {
   const [y, m] = key.split('-')
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const months = t('months.short')
   return `${months[parseInt(m) - 1]} ${y}`
 }
 
 function getCategoryMeta(val) {
-  return categories.find((c) => c.value === val) || { label: val, color: 'bg-gray-100 text-gray-600', icon: Receipt }
+  const cat = categories.find((c) => c.value === val)
+  return {
+    label: t(`expenses.categories.${val}`) || val,
+    color: categoryColors[val] || 'bg-gray-100 text-gray-600',
+    icon: cat?.icon || Receipt,
+  }
 }
 
 async function fetchItems() {
@@ -101,26 +114,26 @@ async function saveItem() {
   try {
     if (editingId.value) {
       await api.put(`/expenses/${editingId.value}`, payload)
-      toast.success('Expense updated')
+      toast.success(t('expenses.updated'))
     } else {
       await api.post('/expenses/', payload)
-      toast.success('Expense added')
+      toast.success(t('expenses.added'))
     }
     resetForm()
     await fetchItems()
   } catch (e) {
-    toast.error(e.response?.data?.detail || 'Failed to save expense')
+    toast.error(e.response?.data?.detail || t('expenses.saveFailed'))
   }
 }
 
 async function deleteItem(id) {
-  if (!confirm('Delete this expense?')) return
+  if (!confirm(t('expenses.deleteConfirm'))) return
   try {
     await api.delete(`/expenses/${id}`)
-    toast.success('Expense deleted')
+    toast.success(t('expenses.deleted'))
     await fetchItems()
   } catch (e) {
-    toast.error('Failed to delete expense')
+    toast.error(t('expenses.deleteFailed'))
   }
 }
 
@@ -128,7 +141,7 @@ function fmt(v) { return `\u20AC${Number(v).toFixed(2)}` }
 
 function formatDate(d) {
   const date = new Date(d + 'T00:00:00')
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const days = t('days.short')
   return `${days[date.getDay()]}, ${date.getDate()}`
 }
 
@@ -139,10 +152,10 @@ watch([startDateISO, endDateISO], fetchItems)
 <template>
   <div class="p-4 lg:p-8 max-w-4xl mx-auto">
     <div class="flex items-center justify-between mb-4">
-      <h2 class="text-xl lg:text-2xl font-bold text-gray-800">Expenses</h2>
+      <h2 class="text-xl lg:text-2xl font-bold text-gray-800">{{ t('expenses.title') }}</h2>
       <button @click="showForm = !showForm; if (!showForm) resetForm()" class="inline-flex items-center gap-1.5 bg-blue-600 text-white text-sm font-medium px-4 py-2.5 rounded-xl hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm">
         <Plus v-if="!showForm" :size="16" />
-        {{ showForm ? 'Cancel' : 'Add Expense' }}
+        {{ showForm ? t('common.cancel') : t('expenses.add') }}
       </button>
     </div>
 
@@ -150,11 +163,11 @@ watch([startDateISO, endDateISO], fetchItems)
 
     <div v-if="items.length" class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
       <div class="bg-white rounded-xl border border-gray-200 p-3">
-        <p class="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wide">Total</p>
+        <p class="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wide">{{ t('expenses.total') }}</p>
         <p class="text-lg font-bold text-rose-500 mt-0.5">{{ fmt(totalExpenses) }}</p>
       </div>
       <div class="bg-white rounded-xl border border-gray-200 p-3">
-        <p class="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wide">Entries</p>
+        <p class="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wide">{{ t('expenses.entries') }}</p>
         <p class="text-lg font-bold text-gray-800 mt-0.5">{{ totalEntries }}</p>
       </div>
       <div v-for="[cat, total] in categoryTotals.slice(0, 2)" :key="cat" class="bg-white rounded-xl border border-gray-200 p-3">
@@ -173,69 +186,69 @@ watch([startDateISO, endDateISO], fetchItems)
       leave-to-class="opacity-0 -translate-y-1"
     >
       <form v-if="showForm" @submit.prevent="saveItem" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 mb-6 space-y-4">
-        <h3 class="text-sm font-semibold text-gray-700">{{ editingId ? 'Edit Expense' : 'New Expense' }}</h3>
+        <h3 class="text-sm font-semibold text-gray-700">{{ editingId ? t('expenses.edit') : t('expenses.new') }}</h3>
 
         <div>
-          <label class="block text-xs font-medium text-gray-500 mb-2">Category</label>
+          <label class="block text-xs font-medium text-gray-500 mb-2">{{ t('expenses.category') }}</label>
           <div class="grid grid-cols-2 gap-2">
             <button v-for="c in categories" :key="c.value" type="button" @click="form.category = c.value"
               class="flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all"
               :class="form.category === c.value ? 'border-blue-500 bg-blue-50 text-blue-700 ring-2 ring-blue-200' : 'border-gray-200 text-gray-600 hover:border-gray-300'">
               <component :is="c.icon" :size="16" class="shrink-0" />
-              <span class="truncate">{{ c.label }}</span>
+              <span class="truncate">{{ t(`expenses.categories.${c.value}`) }}</span>
             </button>
           </div>
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1.5">Date</label>
+          <label class="block text-xs font-medium text-gray-500 mb-1.5">{{ t('expenses.date') }}</label>
           <input v-model="form.date" type="date" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1.5">Amount (&#8364;)</label>
+          <label class="block text-xs font-medium text-gray-500 mb-1.5">{{ t('expenses.amount') }}</label>
           <input v-model="form.amount" type="number" step="0.01" required placeholder="0.00" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1.5">Description</label>
-          <input v-model="form.description" type="text" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" placeholder="Optional description" />
+          <label class="block text-xs font-medium text-gray-500 mb-1.5">{{ t('expenses.description') }}</label>
+          <input v-model="form.description" type="text" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" :placeholder="t('expenses.descriptionPlaceholder')" />
         </div>
 
         <template v-if="isFuel">
           <div class="bg-amber-50 rounded-xl p-4 space-y-4 border border-amber-100">
-            <p class="text-xs font-semibold text-amber-700 uppercase tracking-wide">Fuel Details</p>
+            <p class="text-xs font-semibold text-amber-700 uppercase tracking-wide">{{ t('expenses.fuelDetails') }}</p>
 
             <div>
-              <label class="block text-xs font-medium text-gray-500 mb-1.5">Station</label>
+              <label class="block text-xs font-medium text-gray-500 mb-1.5">{{ t('expenses.station') }}</label>
               <input v-model="form.station_name" type="text" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow bg-white" placeholder="e.g. Galp" />
             </div>
 
             <div>
-              <label class="block text-xs font-medium text-gray-500 mb-1.5">Fuel Type</label>
+              <label class="block text-xs font-medium text-gray-500 mb-1.5">{{ t('expenses.fuelType') }}</label>
               <select v-model="form.fuel_type" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow bg-white">
-                <option value="">Select...</option>
-                <option value="diesel">Diesel</option>
-                <option value="gasoline">Gasoline</option>
-                <option value="lpg">LPG</option>
-                <option value="electric">Electric</option>
+                <option value="">{{ t('expenses.fuelTypeSelect') }}</option>
+                <option value="diesel">{{ t('expenses.fuelTypes.diesel') }}</option>
+                <option value="gasoline">{{ t('expenses.fuelTypes.gasoline') }}</option>
+                <option value="lpg">{{ t('expenses.fuelTypes.lpg') }}</option>
+                <option value="electric">{{ t('expenses.fuelTypes.electric') }}</option>
               </select>
             </div>
 
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block text-xs font-medium text-gray-500 mb-1.5">Price / Unit (&#8364;)</label>
+                <label class="block text-xs font-medium text-gray-500 mb-1.5">{{ t('expenses.pricePerUnit') }}</label>
                 <input v-model="form.price_per_unit" type="number" step="0.001" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow bg-white" placeholder="1.650" />
               </div>
               <div>
-                <label class="block text-xs font-medium text-gray-500 mb-1.5">Qty (L / kWh)</label>
+                <label class="block text-xs font-medium text-gray-500 mb-1.5">{{ t('expenses.quantity') }}</label>
                 <input v-model="form.quantity" type="number" step="0.01" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow bg-white" placeholder="27.27" />
               </div>
             </div>
           </div>
         </template>
 
-        <button type="submit" class="w-full bg-blue-600 text-white rounded-xl py-3.5 text-sm font-semibold hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm">{{ editingId ? 'Update Expense' : 'Save Expense' }}</button>
+        <button type="submit" class="w-full bg-blue-600 text-white rounded-xl py-3.5 text-sm font-semibold hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm">{{ editingId ? t('expenses.update') : t('expenses.save') }}</button>
       </form>
     </Transition>
 
@@ -243,7 +256,7 @@ watch([startDateISO, endDateISO], fetchItems)
 
     <div v-else-if="items.length === 0" class="text-center py-16">
       <Receipt :size="48" class="text-gray-300 mx-auto mb-3" :stroke-width="1" />
-      <p class="text-gray-400 text-sm">No expenses for this period</p>
+      <p class="text-gray-400 text-sm">{{ t('expenses.empty') }}</p>
     </div>
 
     <div v-else class="space-y-6">
@@ -268,7 +281,7 @@ watch([startDateISO, endDateISO], fetchItems)
                   </p>
                   <p v-if="item.station_name" class="text-xs text-gray-400 truncate">
                     {{ item.station_name }}
-                    <span v-if="item.fuel_type">&middot; {{ item.fuel_type }}</span>
+                    <span v-if="item.fuel_type">&middot; {{ t(`expenses.fuelTypes.${item.fuel_type}`) || item.fuel_type }}</span>
                     <span v-if="item.quantity"> &middot; {{ item.quantity }} {{ item.fuel_type === 'electric' ? 'kWh' : 'L' }}</span>
                   </p>
                 </div>
