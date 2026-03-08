@@ -1,4 +1,5 @@
 import asyncio
+import os
 from logging.config import fileConfig
 
 from alembic import context
@@ -7,8 +8,13 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from app.database import Base
 from app.models import Activity, Earning, Expense, User  # noqa: F401
+from app.config import settings
 
 config = context.config
+
+# Use the same DATABASE_URL as the app — env var > .env > default
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
@@ -23,7 +29,7 @@ def run_migrations_offline():
 
 
 def do_run_migrations(connection):
-    context.configure(connection=connection, target_metadata=target_metadata)
+    context.configure(connection=connection, target_metadata=target_metadata, render_as_batch=True)
     with context.begin_transaction():
         context.run_migrations()
 
