@@ -15,14 +15,14 @@ export function useDateBrowser() {
   }
 
   const rangeStart = computed(() => {
-    if (viewMode.value === 'week') {
-      return startOfWeek(currentDate.value)
-    }
+    if (viewMode.value === 'day') return new Date(currentDate.value)
+    if (viewMode.value === 'week') return startOfWeek(currentDate.value)
     const d = new Date(currentDate.value)
     return new Date(d.getFullYear(), d.getMonth(), 1)
   })
 
   const rangeEnd = computed(() => {
+    if (viewMode.value === 'day') return new Date(currentDate.value)
     if (viewMode.value === 'week') {
       const s = startOfWeek(currentDate.value)
       s.setDate(s.getDate() + 6)
@@ -34,6 +34,11 @@ export function useDateBrowser() {
 
   const rangeLabel = computed(() => {
     const months = t('months.short')
+    const days = t('days.short')
+    if (viewMode.value === 'day') {
+      const d = currentDate.value
+      return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`
+    }
     if (viewMode.value === 'week') {
       const s = rangeStart.value
       const e = rangeEnd.value
@@ -45,7 +50,9 @@ export function useDateBrowser() {
 
   function prev() {
     const d = new Date(currentDate.value)
-    if (viewMode.value === 'week') {
+    if (viewMode.value === 'day') {
+      d.setDate(d.getDate() - 1)
+    } else if (viewMode.value === 'week') {
       d.setDate(d.getDate() - 7)
     } else {
       d.setMonth(d.getMonth() - 1)
@@ -55,7 +62,9 @@ export function useDateBrowser() {
 
   function next() {
     const d = new Date(currentDate.value)
-    if (viewMode.value === 'week') {
+    if (viewMode.value === 'day') {
+      d.setDate(d.getDate() + 1)
+    } else if (viewMode.value === 'week') {
       d.setDate(d.getDate() + 7)
     } else {
       d.setMonth(d.getMonth() + 1)
@@ -68,7 +77,10 @@ export function useDateBrowser() {
   }
 
   function toISODate(d) {
-    return d.toISOString().slice(0, 10)
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${y}-${m}-${day}`
   }
 
   const startDateISO = computed(() => toISODate(rangeStart.value))

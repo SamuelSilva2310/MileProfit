@@ -11,6 +11,7 @@ class Expense(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    vehicle_id: Mapped[int | None] = mapped_column(ForeignKey("vehicles.id"), nullable=True)
     date: Mapped[date] = mapped_column(Date, index=True)
     category: Mapped[str] = mapped_column(String(50))  # fuel_charging, maintenance, improvements, operational
     subcategory: Mapped[str | None] = mapped_column(String(100), nullable=True)
@@ -23,3 +24,4 @@ class Expense(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="expenses")
+    vehicle = relationship("Vehicle")

@@ -13,6 +13,7 @@ class ExpenseCreate(BaseModel):
     fuel_type: str | None = None
     price_per_unit: float | None = None
     quantity: float | None = None
+    vehicle_id: int | None = None
 
 
 class ExpenseUpdate(BaseModel):
@@ -25,6 +26,7 @@ class ExpenseUpdate(BaseModel):
     fuel_type: str | None = None
     price_per_unit: float | None = None
     quantity: float | None = None
+    vehicle_id: int | None = None
 
 
 class ExpenseResponse(BaseModel):
@@ -38,5 +40,6 @@ class ExpenseResponse(BaseModel):
     fuel_type: str | None
     price_per_unit: float | None
     quantity: float | None
+    vehicle_id: int | None
 
     model_config = {"from_attributes": True}

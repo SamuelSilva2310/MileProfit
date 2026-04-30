@@ -11,6 +11,7 @@ class Activity(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    vehicle_id: Mapped[int | None] = mapped_column(ForeignKey("vehicles.id"), nullable=True)
     date: Mapped[date] = mapped_column(Date, index=True)
     start_km: Mapped[float] = mapped_column(Float)
     end_km: Mapped[float] = mapped_column(Float)
@@ -19,6 +20,7 @@ class Activity(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="activities")
+    vehicle = relationship("Vehicle")
 
     @property
     def total_km(self) -> float:

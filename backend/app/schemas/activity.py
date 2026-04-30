@@ -9,6 +9,7 @@ class ActivityCreate(BaseModel):
     end_km: float
     start_time: datetime.time | None = None
     end_time: datetime.time | None = None
+    vehicle_id: int | None = None
 
 
 class ActivityUpdate(BaseModel):
@@ -17,6 +18,7 @@ class ActivityUpdate(BaseModel):
     end_km: float | None = None
     start_time: datetime.time | None = None
     end_time: datetime.time | None = None
+    vehicle_id: int | None = None
 
 
 class ActivityResponse(BaseModel):
@@ -27,5 +29,6 @@ class ActivityResponse(BaseModel):
     total_km: float
     start_time: datetime.time | None
     end_time: datetime.time | None
+    vehicle_id: int | None
 
     model_config = {"from_attributes": True}

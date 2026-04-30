@@ -21,3 +21,4 @@ class User(Base):
     activities = relationship("Activity", back_populates="user", cascade="all, delete-orphan")
     earnings = relationship("Earning", back_populates="user", cascade="all, delete-orphan")
     expenses = relationship("Expense", back_populates="user", cascade="all, delete-orphan")
+    vehicles = relationship("Vehicle", back_populates="user", cascade="all, delete-orphan")

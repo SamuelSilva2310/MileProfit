@@ -174,6 +174,7 @@ watch(summary, (s) => {
   statCards.value = [
     { labelKey: 'dashboard.earnings', value: fmt(s.total_earnings), color: 'text-blue-600', bg: 'bg-blue-50' },
     { labelKey: 'dashboard.expenses', value: fmt(s.total_expenses), color: 'text-rose-500', bg: 'bg-rose-50' },
+    { labelKey: 'dashboard.trips', value: `${s.activities_count}`, color: 'text-teal-600', bg: 'bg-teal-50' },
     { labelKey: 'dashboard.distance', value: `${s.total_km.toFixed(1)} km`, color: 'text-amber-600', bg: 'bg-amber-50' },
     { labelKey: 'dashboard.hours', value: `${s.total_hours.toFixed(1)}h`, color: 'text-purple-600', bg: 'bg-purple-50' },
   ]
@@ -183,7 +184,7 @@ watch(summary, (s) => {
 <template>
   <div class="p-4 lg:p-8 max-w-6xl mx-auto">
     <div class="flex items-center justify-between mb-4">
-      <h2 class="text-xl lg:text-2xl font-bold text-gray-800">{{ t('dashboard.title') }}</h2>
+      <h2 class="text-xl lg:text-2xl font-bold text-gray-800 dark:text-gray-100">{{ t('dashboard.title') }}</h2>
     </div>
 
     <DateBrowser
@@ -201,11 +202,11 @@ watch(summary, (s) => {
 
     <template v-else-if="summary">
       <!-- Take-Home Hero Card -->
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 sm:p-6 mb-6">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 sm:p-6 mb-6">
         <div class="flex items-center justify-between gap-4">
           <div class="min-w-0">
             <div class="flex items-center gap-2 mb-1">
-              <p class="text-sm font-medium text-gray-500">{{ t('dashboard.takeHome') }}</p>
+              <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ t('dashboard.takeHome') }}</p>
               <span class="group relative cursor-help">
                 <Info :size="14" class="text-gray-300" />
                 <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:block bg-gray-800 text-white text-[10px] rounded-lg px-2.5 py-1.5 whitespace-nowrap z-10">
@@ -227,13 +228,13 @@ watch(summary, (s) => {
         </div>
 
         <!-- Breakdown row -->
-        <div class="mt-4 pt-4 border-t border-gray-100 grid grid-cols-2 gap-2">
+        <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 grid grid-cols-2 gap-2">
           <div>
-            <p class="text-[10px] sm:text-xs font-medium text-gray-400 uppercase tracking-wide mb-0.5">{{ t('dashboard.netProfit') }}</p>
+            <p class="text-[10px] sm:text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-0.5">{{ t('dashboard.netProfit') }}</p>
             <p class="text-base sm:text-lg font-bold" :class="summary.net_profit >= 0 ? 'text-emerald-600' : 'text-rose-600'">
               {{ fmt(summary.net_profit) }}
             </p>
-            <p class="text-[10px] text-gray-400 mt-0.5 hidden sm:block">{{ t('dashboard.earningsMinusExpenses') }}</p>
+            <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5 hidden sm:block">{{ t('dashboard.earningsMinusExpenses') }}</p>
           </div>
           <div>
             <div class="flex items-center gap-1 mb-0.5">
@@ -246,23 +247,23 @@ watch(summary, (s) => {
               </span>
             </div>
             <p class="text-base sm:text-lg font-bold text-orange-500">-{{ fmt(summary.estimated_tax) }}</p>
-            <p class="text-[10px] text-gray-400 mt-0.5 hidden sm:block">{{ t('dashboard.irsEstimate') }}</p>
+            <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5 hidden sm:block">{{ t('dashboard.irsEstimate') }}</p>
           </div>
         </div>
 
         <!-- Tax-exempt annotation -->
-        <div class="mt-3 pt-3 border-t border-gray-100 flex items-start gap-2">
+        <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex items-start gap-2">
           <ShieldCheck :size="14" class="text-emerald-500 shrink-0 mt-0.5" />
-          <p class="text-[10px] sm:text-xs text-gray-400">{{ t('dashboard.taxExemptNote') }}</p>
+          <p class="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500">{{ t('dashboard.taxExemptNote') }}</p>
         </div>
       </div>
 
       <!-- Stat Cards -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6">
-        <div v-for="card in statCards" :key="card.labelKey" class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 lg:gap-4 mb-6">
+        <div v-for="card in statCards" :key="card.labelKey" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
           <div class="flex items-center gap-2 mb-2">
             <div class="w-2 h-2 rounded-full" :class="card.bg.replace('50', '400')"></div>
-            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">{{ t(card.labelKey) }}</p>
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">{{ t(card.labelKey) }}</p>
           </div>
           <p class="text-xl lg:text-2xl font-bold" :class="card.color">{{ card.value }}</p>
         </div>
@@ -270,22 +271,22 @@ watch(summary, (s) => {
 
       <!-- Charts Row -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-        <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
-          <h3 class="text-sm font-semibold text-gray-700 mb-4">{{ t('dashboard.earningsVsExpenses') }}</h3>
+        <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">{{ t('dashboard.earningsVsExpenses') }}</h3>
           <div v-if="lineChartData" class="h-56 lg:h-72">
             <Line :data="lineChartData" :options="lineChartOptions" />
           </div>
-          <div v-else class="h-56 flex items-center justify-center text-sm text-gray-400">
+          <div v-else class="h-56 flex items-center justify-center text-sm text-gray-400 dark:text-gray-500">
             {{ t('dashboard.noData') }}
           </div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
-          <h3 class="text-sm font-semibold text-gray-700 mb-4">{{ t('dashboard.earningsByPlatform') }}</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">{{ t('dashboard.earningsByPlatform') }}</h3>
           <div v-if="doughnutPlatformData" class="h-56 lg:h-72">
             <Doughnut :data="doughnutPlatformData" :options="doughnutOptions" />
           </div>
-          <div v-else class="h-56 flex items-center justify-center text-sm text-gray-400">
+          <div v-else class="h-56 flex items-center justify-center text-sm text-gray-400 dark:text-gray-500">
             {{ t('dashboard.noEarningsData') }}
           </div>
         </div>
@@ -293,41 +294,41 @@ watch(summary, (s) => {
 
       <!-- Bottom Row -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
-          <h3 class="text-sm font-semibold text-gray-700 mb-4">{{ t('dashboard.expensesByCategory') }}</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">{{ t('dashboard.expensesByCategory') }}</h3>
           <div v-if="doughnutCategoryData" class="h-56 lg:h-64">
             <Doughnut :data="doughnutCategoryData" :options="doughnutOptions" />
           </div>
-          <div v-else class="h-56 flex items-center justify-center text-sm text-gray-400">
+          <div v-else class="h-56 flex items-center justify-center text-sm text-gray-400 dark:text-gray-500">
             {{ t('dashboard.noExpenseData') }}
           </div>
         </div>
 
-        <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
-          <h3 class="text-sm font-semibold text-gray-700 mb-4">{{ t('dashboard.performanceMetrics') }}</h3>
+        <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">{{ t('dashboard.performanceMetrics') }}</h3>
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <div class="space-y-1">
-              <p class="text-xs text-gray-400 uppercase tracking-wide">{{ t('dashboard.earnPerKm') }}</p>
-              <p class="text-lg font-bold text-gray-800">{{ fmt(summary.earnings_per_km) }}</p>
+              <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">{{ t('dashboard.earnPerKm') }}</p>
+              <p class="text-lg font-bold text-gray-800 dark:text-gray-100">{{ fmt(summary.earnings_per_km) }}</p>
             </div>
             <div class="space-y-1">
-              <p class="text-xs text-gray-400 uppercase tracking-wide">{{ t('dashboard.earnPerHour') }}</p>
-              <p class="text-lg font-bold text-gray-800">{{ fmt(summary.earnings_per_hour) }}</p>
+              <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">{{ t('dashboard.earnPerHour') }}</p>
+              <p class="text-lg font-bold text-gray-800 dark:text-gray-100">{{ fmt(summary.earnings_per_hour) }}</p>
             </div>
             <div class="space-y-1">
-              <p class="text-xs text-gray-400 uppercase tracking-wide">{{ t('dashboard.costPerKm') }}</p>
-              <p class="text-lg font-bold text-gray-800">{{ fmt(summary.cost_per_km) }}</p>
+              <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">{{ t('dashboard.costPerKm') }}</p>
+              <p class="text-lg font-bold text-gray-800 dark:text-gray-100">{{ fmt(summary.cost_per_km) }}</p>
             </div>
             <div class="space-y-1">
-              <p class="text-xs text-gray-400 uppercase tracking-wide">{{ t('dashboard.profitPerKm') }}</p>
+              <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">{{ t('dashboard.profitPerKm') }}</p>
               <p class="text-lg font-bold text-emerald-600">{{ fmt(summary.profit_per_km) }}</p>
             </div>
             <div class="space-y-1">
-              <p class="text-xs text-gray-400 uppercase tracking-wide">{{ t('dashboard.profitPerHour') }}</p>
+              <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">{{ t('dashboard.profitPerHour') }}</p>
               <p class="text-lg font-bold text-emerald-600">{{ fmt(summary.profit_per_hour) }}</p>
             </div>
             <div class="space-y-1">
-              <p class="text-xs text-gray-400 uppercase tracking-wide">{{ t('dashboard.estTax') }}</p>
+              <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">{{ t('dashboard.estTax') }}</p>
               <p class="text-lg font-bold text-orange-500">{{ fmt(summary.estimated_tax) }}</p>
             </div>
           </div>

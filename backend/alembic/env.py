@@ -7,7 +7,7 @@ from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from app.database import Base
-from app.models import Activity, Earning, Expense, User  # noqa: F401
+from app.models import Activity, Earning, Expense, User, Vehicle  # noqa: F401
 from app.config import settings
 
 config = context.config

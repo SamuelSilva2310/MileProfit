@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@sentry/vue": "^10.51.0",
     "axios": "^1.13.6",
     "chart.js": "^4.5.1",
     "lucide-vue-next": "^0.577.0",

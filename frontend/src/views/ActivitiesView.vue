@@ -3,12 +3,15 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { Plus, MapPinned, Pencil, Trash2 } from 'lucide-vue-next'
 import api from '../services/api'
 import { useDateBrowser } from '../composables/useDateBrowser'
+import { useVehicles } from '../composables/useVehicles'
 import { useToast } from '../composables/useToast'
+import { todayISO } from '../utils/date'
 import DateBrowser from '../components/DateBrowser.vue'
 import { useI18n } from '../i18n'
 
 const { t } = useI18n()
 const { viewMode, rangeLabel, startDateISO, endDateISO, prev, next, goToday } = useDateBrowser()
+const { vehicles, primaryVehicleId } = useVehicles()
 const toast = useToast()
 
 const items = ref([])
@@ -20,11 +23,12 @@ const form = ref(defaultForm())
 
 function defaultForm() {
   return {
-    date: new Date().toISOString().slice(0, 10),
+    date: todayISO(),
     start_km: '',
     end_km: '',
     start_time: '',
     end_time: '',
+    vehicle_id: primaryVehicleId.value,
   }
 }
 
@@ -73,6 +77,7 @@ function editItem(item) {
     end_km: item.end_km,
     start_time: item.start_time?.slice(0, 5) || '',
     end_time: item.end_time?.slice(0, 5) || '',
+    vehicle_id: item.vehicle_id ?? null,
   }
   editingId.value = item.id
   showForm.value = true
@@ -86,6 +91,7 @@ async function saveItem() {
     end_km: parseFloat(form.value.end_km),
     start_time: form.value.start_time || null,
     end_time: form.value.end_time || null,
+    vehicle_id: form.value.vehicle_id || null,
   }
   try {
     if (editingId.value) {
@@ -126,7 +132,7 @@ watch([startDateISO, endDateISO], fetchItems)
 <template>
   <div class="p-4 lg:p-8 max-w-4xl mx-auto">
     <div class="flex items-center justify-between mb-4">
-      <h2 class="text-xl lg:text-2xl font-bold text-gray-800">{{ t('activities.title') }}</h2>
+      <h2 class="text-xl lg:text-2xl font-bold text-gray-800 dark:text-gray-100">{{ t('activities.title') }}</h2>
       <button
         @click="showForm = !showForm; if (!showForm) resetForm()"
         class="inline-flex items-center gap-1.5 bg-blue-600 text-white text-sm font-medium px-4 py-2.5 rounded-xl hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm"
@@ -146,16 +152,16 @@ watch([startDateISO, endDateISO], fetchItems)
     />
 
     <div v-if="items.length" class="grid grid-cols-3 gap-3 mb-6">
-      <div class="bg-white rounded-xl border border-gray-200 p-3 text-center">
-        <p class="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wide">{{ t('activities.entries') }}</p>
-        <p class="text-lg font-bold text-gray-800 mt-0.5">{{ totalEntries }}</p>
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 text-center">
+        <p class="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">{{ t('activities.entries') }}</p>
+        <p class="text-lg font-bold text-gray-800 dark:text-gray-100 mt-0.5">{{ totalEntries }}</p>
       </div>
-      <div class="bg-white rounded-xl border border-gray-200 p-3 text-center">
-        <p class="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wide">{{ t('activities.totalKm') }}</p>
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 text-center">
+        <p class="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">{{ t('activities.totalKm') }}</p>
         <p class="text-lg font-bold text-blue-600 mt-0.5">{{ totalKm.toFixed(1) }}</p>
       </div>
-      <div class="bg-white rounded-xl border border-gray-200 p-3 text-center">
-        <p class="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wide">{{ t('activities.avgPerDay') }}</p>
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 text-center">
+        <p class="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">{{ t('activities.avgPerDay') }}</p>
         <p class="text-lg font-bold text-amber-600 mt-0.5">{{ avgKm.toFixed(1) }}</p>
       </div>
     </div>
@@ -169,33 +175,41 @@ watch([startDateISO, endDateISO], fetchItems)
       leave-from-class="opacity-100"
       leave-to-class="opacity-0 -translate-y-1"
     >
-      <form v-if="showForm" @submit.prevent="saveItem" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 mb-6 space-y-4">
-        <h3 class="text-sm font-semibold text-gray-700">{{ editingId ? t('activities.edit') : t('activities.new') }}</h3>
+      <form v-if="showForm" @submit.prevent="saveItem" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 mb-6 space-y-4">
+        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200">{{ editingId ? t('activities.edit') : t('activities.new') }}</h3>
 
         <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1.5">{{ t('activities.date') }}</label>
-          <input v-model="form.date" type="date" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
+          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">{{ t('activities.date') }}</label>
+          <input v-model="form.date" type="date" required class="w-full rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1.5">{{ t('activities.startKm') }}</label>
-          <input v-model="form.start_km" type="number" step="0.1" required placeholder="0.0" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
+          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">{{ t('activities.startKm') }}</label>
+          <input v-model="form.start_km" type="number" step="0.1" required placeholder="0.0" class="w-full rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1.5">{{ t('activities.endKm') }}</label>
-          <input v-model="form.end_km" type="number" step="0.1" required placeholder="0.0" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
+          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">{{ t('activities.endKm') }}</label>
+          <input v-model="form.end_km" type="number" step="0.1" required placeholder="0.0" class="w-full rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-medium text-gray-500 mb-1.5">{{ t('activities.startTime') }}</label>
-            <input v-model="form.start_time" type="time" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
+            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">{{ t('activities.startTime') }}</label>
+            <input v-model="form.start_time" type="time" class="w-full rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
           </div>
           <div>
-            <label class="block text-xs font-medium text-gray-500 mb-1.5">{{ t('activities.endTime') }}</label>
-            <input v-model="form.end_time" type="time" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
+            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">{{ t('activities.endTime') }}</label>
+            <input v-model="form.end_time" type="time" class="w-full rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
           </div>
+        </div>
+
+        <div v-if="vehicles.length > 0">
+          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">{{ t('earnings.vehicle') }}</label>
+          <select v-model="form.vehicle_id" class="w-full rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow bg-white">
+            <option :value="null">{{ t('earnings.noVehicle') }}</option>
+            <option v-for="v in vehicles" :key="v.id" :value="v.id">{{ v.name }}</option>
+          </select>
         </div>
 
         <button type="submit" class="w-full bg-blue-600 text-white rounded-xl py-3.5 text-sm font-semibold hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm">
@@ -210,29 +224,29 @@ watch([startDateISO, endDateISO], fetchItems)
 
     <div v-else-if="items.length === 0" class="text-center py-16">
       <MapPinned :size="48" class="text-gray-300 mx-auto mb-3" :stroke-width="1" />
-      <p class="text-gray-400 text-sm">{{ t('activities.empty') }}</p>
+      <p class="text-gray-400 dark:text-gray-500 text-sm">{{ t('activities.empty') }}</p>
     </div>
 
     <div v-else class="space-y-6">
       <div v-for="[month, group] in grouped" :key="month">
         <div class="flex items-center gap-2 mb-2 px-1">
-          <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ monthLabel(month) }}</h3>
-          <div class="flex-1 h-px bg-gray-200"></div>
-          <span class="text-xs text-gray-400">{{ group.reduce((s, i) => s + i.total_km, 0).toFixed(1) }} km</span>
+          <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">{{ monthLabel(month) }}</h3>
+          <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
+          <span class="text-xs text-gray-400 dark:text-gray-500">{{ group.reduce((s, i) => s + i.total_km, 0).toFixed(1) }} km</span>
         </div>
         <div class="space-y-2">
-          <div v-for="item in group" :key="item.id" class="bg-white rounded-xl border border-gray-200 p-4 transition-colors">
+          <div v-for="item in group" :key="item.id" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 transition-colors">
             <div class="flex items-start justify-between gap-2">
               <div class="flex items-start gap-3 min-w-0">
-                <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold shrink-0">
+                <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-bold shrink-0">
                   {{ formatDate(item.date).split(',')[0] }}
                 </div>
                 <div class="min-w-0">
-                  <p class="text-sm font-medium text-gray-800">{{ formatDate(item.date).split(', ')[1] }} {{ monthLabel(item.date.slice(0, 7)).split(' ')[0] }}</p>
-                  <p class="text-xs text-gray-400 mt-0.5">
+                  <p class="text-sm font-medium text-gray-800 dark:text-gray-100">{{ formatDate(item.date).split(', ')[1] }} {{ monthLabel(item.date.slice(0, 7)).split(' ')[0] }}</p>
+                  <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                     {{ item.start_km.toLocaleString() }} &rarr; {{ item.end_km.toLocaleString() }} km
                   </p>
-                  <p v-if="item.start_time && item.end_time" class="text-xs text-gray-400">
+                  <p v-if="item.start_time && item.end_time" class="text-xs text-gray-400 dark:text-gray-500">
                     {{ item.start_time.slice(0, 5) }} &ndash; {{ item.end_time.slice(0, 5) }}
                   </p>
                 </div>
