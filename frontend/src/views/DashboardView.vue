@@ -174,7 +174,7 @@ watch(summary, (s) => {
   statCards.value = [
     { labelKey: 'dashboard.earnings', value: fmt(s.total_earnings), color: 'text-blue-600', bg: 'bg-blue-50' },
     { labelKey: 'dashboard.expenses', value: fmt(s.total_expenses), color: 'text-rose-500', bg: 'bg-rose-50' },
-    { labelKey: 'dashboard.trips', value: `${s.activities_count}`, color: 'text-teal-600', bg: 'bg-teal-50' },
+    { labelKey: 'dashboard.trips', value: `${s.earnings_count}`, color: 'text-teal-600', bg: 'bg-teal-50' },
     { labelKey: 'dashboard.distance', value: `${s.total_km.toFixed(1)} km`, color: 'text-amber-600', bg: 'bg-amber-50' },
     { labelKey: 'dashboard.hours', value: `${s.total_hours.toFixed(1)}h`, color: 'text-purple-600', bg: 'bg-purple-50' },
   ]

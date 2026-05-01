@@ -27,8 +27,8 @@ class ActivityResponse(BaseModel):
     start_km: float
     end_km: float
     total_km: float
-    start_time: datetime.time | None
-    end_time: datetime.time | None
-    vehicle_id: int | None
+    start_time: datetime.time | None = None
+    end_time: datetime.time | None = None
+    vehicle_id: int | None = None
 
     model_config = {"from_attributes": True}

@@ -117,10 +117,10 @@ async def get_summary(
             total_hours += (e_secs - s_secs) / 3600
 
     count_result = await db.execute(
-        select(func.count(Activity.id)).where(
-            Activity.user_id == user.id,
-            Activity.date >= start_date,
-            Activity.date <= end_date,
+        select(func.count(Earning.id)).where(
+            Earning.user_id == user.id,
+            Earning.date >= start_date,
+            Earning.date <= end_date,
         )
     )
     activities_count = count_result.scalar() or 0
@@ -134,7 +134,7 @@ async def get_summary(
         net_profit=round(net_profit, 2),
         total_km=round(total_km, 2),
         total_hours=round(total_hours, 2),
-        activities_count=activities_count,
+        earnings_count=activities_count,
         earnings_per_km=round(total_earnings / total_km, 2) if total_km > 0 else None,
         earnings_per_hour=round(total_earnings / total_hours, 2) if total_hours > 0 else None,
         cost_per_km=round(total_expenses / total_km, 2) if total_km > 0 else None,

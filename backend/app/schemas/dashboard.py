@@ -9,7 +9,7 @@ class DashboardSummary(BaseModel):
     net_profit: float
     total_km: float
     total_hours: float
-    activities_count: int
+    earnings_count: int
     earnings_per_km: float | None
     earnings_per_hour: float | None
     cost_per_km: float | None

@@ -144,8 +144,8 @@ async function removeVehicle(id) {
             <span class="text-sm font-medium text-gray-700 dark:text-gray-200">{{ t('profile.darkMode') }}</span>
           </div>
           <div class="relative">
-            <div class="w-10 h-6 rounded-full transition-colors" :class="isDark ? 'bg-blue-600' : 'bg-gray-200'"></div>
-            <div class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform" :class="isDark ? 'translate-x-4' : ''"></div>
+            <div class="w-12 h-7 rounded-full transition-colors" :class="isDark ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-600'"></div>
+            <div class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="isDark ? 'translate-x-5' : ''"></div>
           </div>
         </button>
       </div>

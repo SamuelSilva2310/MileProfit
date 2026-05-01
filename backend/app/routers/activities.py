@@ -23,15 +23,7 @@ async def create_activity(
     db.add(activity)
     await db.flush()
     await db.refresh(activity)
-    return ActivityResponse(
-        id=activity.id,
-        date=activity.date,
-        start_km=activity.start_km,
-        end_km=activity.end_km,
-        total_km=activity.total_km,
-        start_time=activity.start_time,
-        end_time=activity.end_time,
-    )
+    return ActivityResponse.model_validate(activity)
 
 
 @router.get("/", response_model=list[ActivityResponse])
@@ -47,19 +39,7 @@ async def list_activities(
     if end_date:
         query = query.where(Activity.date <= end_date)
     result = await db.execute(query)
-    activities = result.scalars().all()
-    return [
-        ActivityResponse(
-            id=a.id,
-            date=a.date,
-            start_km=a.start_km,
-            end_km=a.end_km,
-            total_km=a.total_km,
-            start_time=a.start_time,
-            end_time=a.end_time,
-        )
-        for a in activities
-    ]
+    return [ActivityResponse.model_validate(a) for a in result.scalars().all()]
 
 
 @router.get("/{activity_id}", response_model=ActivityResponse)
@@ -74,15 +54,7 @@ async def get_activity(
     activity = result.scalar_one_or_none()
     if not activity:
         raise HTTPException(status_code=404, detail="Activity not found")
-    return ActivityResponse(
-        id=activity.id,
-        date=activity.date,
-        start_km=activity.start_km,
-        end_km=activity.end_km,
-        total_km=activity.total_km,
-        start_time=activity.start_time,
-        end_time=activity.end_time,
-    )
+    return ActivityResponse.model_validate(activity)
 
 
 @router.put("/{activity_id}", response_model=ActivityResponse)
@@ -103,15 +75,7 @@ async def update_activity(
     db.add(activity)
     await db.flush()
     await db.refresh(activity)
-    return ActivityResponse(
-        id=activity.id,
-        date=activity.date,
-        start_km=activity.start_km,
-        end_km=activity.end_km,
-        total_km=activity.total_km,
-        start_time=activity.start_time,
-        end_time=activity.end_time,
-    )
+    return ActivityResponse.model_validate(activity)
 
 
 @router.delete("/{activity_id}", status_code=status.HTTP_204_NO_CONTENT)

@@ -32,8 +32,8 @@ class EarningResponse(BaseModel):
     total_earnings: float
     tips: float
     is_taxable: bool
-    notes: str | None
-    is_paid: bool
-    vehicle_id: int | None
+    notes: str | None = None
+    is_paid: bool = True
+    vehicle_id: int | None = None
 
     model_config = {"from_attributes": True}

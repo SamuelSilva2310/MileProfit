@@ -246,13 +246,13 @@ watch([startDateISO, endDateISO], fetchItems)
             <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">{{ t('earnings.notes') }}</label>
             <input v-model="form.notes" type="text" :placeholder="t('earnings.notesPlaceholder')" class="w-full rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 px-4 py-3 text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow" />
           </div>
-          <label class="flex items-center gap-3 cursor-pointer select-none">
-            <div class="relative">
-              <input type="checkbox" v-model="form.is_paid" class="sr-only peer" />
-              <div class="w-10 h-6 bg-gray-200 rounded-full peer-checked:bg-emerald-500 transition-colors"></div>
-              <div class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
-            </div>
+          <label class="flex items-center justify-between gap-3 cursor-pointer select-none w-full px-4 py-3.5 rounded-xl border border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-colors">
             <span class="text-sm font-medium text-gray-700 dark:text-gray-200">{{ t('earnings.isPaid') }}</span>
+            <div class="relative shrink-0">
+              <input type="checkbox" v-model="form.is_paid" class="sr-only peer" />
+              <div class="w-12 h-7 bg-gray-200 dark:bg-gray-600 rounded-full peer-checked:bg-emerald-500 transition-colors"></div>
+              <div class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow transition-transform peer-checked:translate-x-5"></div>
+            </div>
           </label>
         </template>
 
